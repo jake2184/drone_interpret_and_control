@@ -11,6 +11,7 @@ function interpret_and_control(mqttCreds, cloudant){
        "auth-key" : mqttCreds.apiKey,
        "auth-token" : mqttCreds.apiToken
     }
+    console.log(mqttConfig);
     this.client = new Client.IotfApplication(mqttConfig);
     this.client.connect();
 
@@ -32,7 +33,7 @@ interpret_and_control.prototype.imageKeywords = function(keywords, time, locatio
 
         switch (keyword) {
             case "Fire":
-                this.sendCommand("pi", "dronepi", "movement", "json", "UP");
+                this.sendCommand("pi", "drone", "movement", "json", JSON.stringify({direction:"UP"}));
                 var color = {d: {r:155, g:255, b:0, alpha:120}};
                 this.sendCommand("Android", "phone", "color", "json", JSON.stringify(color));
                 this.sendCommand("Android", "phone", "alert", "json", JSON.stringify({d:{text:"Fire"}}));
@@ -41,7 +42,7 @@ interpret_and_control.prototype.imageKeywords = function(keywords, time, locatio
                 identified = true;
                 break;
             case "Person":
-                this.sendCommand("pi", "dronepi", "movement", "json", "STOP");
+                this.sendCommand("pi", "drone", "movement", "json", JSON.stringify({direction:"STOP"}));
                 this.sendCommand("Android", "phone", "alert", "json", JSON.stringify({d:{text:"Person"}}));
                 this.sendCommand("Android", "phone", "log", "json", JSON.stringify({d:{text:"Person"}}));
                 this.logEvent(keyword, time, location);
@@ -53,7 +54,7 @@ interpret_and_control.prototype.imageKeywords = function(keywords, time, locatio
                 identified = true;
                 break;
             case "Explosion":
-                this.sendCommand("pi", "dronepi", "movement", "json", "STOP");
+                this.sendCommand("pi", "drone", "movement", "json", "STOP");
                 this.sendCommand("Android", "phone", "alert", "json", JSON.stringify({d:{text:"Explosion"}}));
                 this.sendCommand("Android", "phone", "log", "json", JSON.stringify({d:{text:"Explosion"}}));
                 this.logEvent(keyword, time, location);
@@ -80,7 +81,7 @@ interpret_and_control.prototype.speechTranscript = function(transcript){
         this.sendCommand("Android", "phone", "speech", "json", JSON.stringify());
     }
     if(!transcript.equals("")){
-        this.sendCommand("pi", "dronepi", "movement", "json", "STOP");
+        this.sendCommand("pi", "drone", "movement", "json", "STOP");
         this.sendCommand("Android", "phone", "alert", "json", JSON.stringify({d:{text:"Person"}}));
         this.sendCommand("Android", "phone", "log", "json", JSON.stringify({d:{text:"Person"}}));
         this.logEvent("Person:" + transcript, time, location);
