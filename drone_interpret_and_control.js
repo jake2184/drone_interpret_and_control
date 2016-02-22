@@ -29,9 +29,12 @@ interpret_and_control.prototype.imageKeywords = function(keywords, time, locatio
     var identified = false;
 
 
-    for (var keyword in keywords){
-
-        switch (keyword) {
+    for(var i=0; i<keywords.length;i++){
+        keyword = keywords[i].name
+        if(keywords[i].score < 0.6){
+            return identified;
+        }
+        switch (keywords[i].name) {
             case "Fire":
                 this.sendCommand("pi", "drone", "movement", "json", JSON.stringify({direction:"UP"}));
                 var color = {d: {r:155, g:255, b:0, alpha:120}};

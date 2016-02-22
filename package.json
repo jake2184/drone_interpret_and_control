@@ -14,7 +14,7 @@
   },
   "license": "ISC",
   "readme": "ERROR: No README data found!",
-  "_id": "drone_interpret_and_control@1.0.0",
+  "_id": "drone_interpret_and_control@1.0.1",
   "_shasum": "91bcf4b4b2eff4c55f5c4e299935ed80991cd646",
   "_from": "drone_interpret_and_control@latest",
   "devDependencies": {
