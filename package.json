@@ -1,6 +1,6 @@
 {
   "name": "drone_interpret_and_control",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Drone Interpretation and Control",
   "main": "drone_interpret_and_control.js",
   "scripts": {
