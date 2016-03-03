@@ -4,31 +4,26 @@ var Client = require('ibmiotf');
 var mode_normal = require('./modes/normal');
 var mode_interact = require('./modes/interact');
 
-var Fire = "Fire";
-var Person = "Person";
-var Building = "Building";
-var Explosion = "Explosion";
-var Normal = "Normal";
-var Smoke = "Smoke";
+// Image Labels
+const Fire = "Fire";
+const Person = "Person";
+const Building = "Building";
+const Explosion = "Explosion";
+const Normal = "Normal";
+const Smoke = "Smoke";
 
-
+// MQTT device type/id/format
+const Android = "Android";
+const phone = "phone";
+const dronepi = "dronepi";
+const movement = "movement";
+const alert = "alert";
+const log = "log";
 
 
 function interpret_and_control(MQTT, cloudant){
     this.cloudant = cloudant;
     this.MQTT = MQTT;
-    // set up mqtt_handler
-    // var mqttConfig = {
-    //    "org" : mqttCreds.org,
-    //    "id" : mqttCreds.id,
-    //    "auth-key" : mqttCreds.apiKey,
-    //    "auth-token" : mqttCreds.apiToken
-    // }
-    // this.client = new Client.IotfApplication(mqttConfig);
-    // this.client.connect();
-    // this.client.on("error", function (err) {
-    //     console.error("Error : " + err);
-    // });
 
     this.currentMode = new mode_normal();
     this.modeFactors = [];
@@ -65,8 +60,8 @@ interpret_and_control.prototype.determineMode = function(){
     // Use this.modeFactors to evaluate mode regularly. As callback?
 
     // Image Determination
-    var labels = this.modeFactors["imageLabels"];
     // NULL values are handled by comparison - returns false
+    var labels = this.modeFactors["imageLabels"];
     if(labels[Fire] >= 0.8){
         this.setMode(Fire);
     } else if (labels[Person] >= 0.8){
@@ -89,7 +84,7 @@ interpret_and_control.prototype.imageKeywordsDetermineMode = function(keywords){
         }
         var keyword = keywords[i].name;
         if ( keyword == Fire ||  keyword == Person ||  keyword == Building ||  keyword == Explosion
-                    ||  keyword == "Smoke") {
+                    ||  keyword == Smoke) {
             this.modeFactors["imageLabels"][keyword] = keywords[i].score;
         }
     }
@@ -106,35 +101,35 @@ interpret_and_control.prototype.imageKeywords = function(keywords, time, locatio
         }
         var keyword = keywords[i].name;
         switch (keyword) {
-            case "Fire":
-                this.MQTT.sendCommand("pi", "dronepi", "movement", "json", "UP");
-                this.MQTT.sendCommand("Android", "phone", "alert", "json", JSON.stringify({d:{text:"Fire"}}));
-                this.MQTT.sendCommand("Android", "phone", "log", "json", JSON.stringify({d:{text:"Fire"}}));
+            case Fire:
+                this.MQTT.sendCommand("pi", dronepi, movement, "json", "UP");
+                this.MQTT.sendCommand(Android, phone, alert, "json", JSON.stringify({d:{text:Fire}}));
+                this.MQTT.sendCommand(Android, phone, log, "json", JSON.stringify({d:{text:Fire, location:location}}));
                 //this.logEvent(keyword, time, location);
                 identified = true;
                 break;
-            case "Person":
-                this.MQTT.sendCommand("pi", "dronepi", "movement", "json", "STOP");
-                this.MQTT.sendCommand("Android", "phone", "alert", "json", JSON.stringify({d:{text:"Person"}}));
-                this.MQTT.sendCommand("Android", "phone", "log", "json", JSON.stringify({d:{text:"Person"}}));
+            case Person:
+                this.MQTT.sendCommand("pi", dronepi, movement, "json", "STOP");
+                this.MQTT.sendCommand(Android, phone, alert, "json", JSON.stringify({d:{text:Person}}));
+                this.MQTT.sendCommand(Android, phone, log, "json", JSON.stringify({d:{text:Person, location:location}}));
                 this.logEvent(keyword, time, location);
                 identified = true;
                 break;
-            case "Building":
-                this.MQTT.sendCommand("Android", "phone", "log", "json", JSON.stringify({d:{text:"Building"}}));
+            case Building:
+                this.MQTT.sendCommand(Android, phone, log, "json", JSON.stringify({d:{text:Building, location:location}}));
                 this.logEvent(keyword, time, location);
                 identified = true;
                 break;
-            case "Explosion":
-                this.MQTT.sendCommand("pi", "dronepi", "movement", "json", "STOP");
-                this.MQTT.sendCommand("Android", "phone", "alert", "json", JSON.stringify({d:{text:"Explosion"}}));
-                this.MQTT.sendCommand("Android", "phone", "log", "json", JSON.stringify({d:{text:"Explosion"}}));
+            case Explosion:
+                this.MQTT.sendCommand("pi", dronepi, movement, "json", "STOP");
+                this.MQTT.sendCommand(Android, phone, alert, "json", JSON.stringify({d:{text:Explosion}}));
+                this.MQTT.sendCommand(Android, phone, log, "json", JSON.stringify({d:{text:Explosion, location:location}}));
                 this.logEvent(keyword, time, location);
                 identified = true;
                 break;
-            case "Smoke":
-                this.MQTT.sendCommand("Android", "phone", "alert", "json", JSON.stringify({d: {text:"Smoke"}}));
-                this.MQTT.sendCommand("Android", "phone", "log", "json", JSON.stringify({d: {text:"Smoke"}}));
+            case Smoke:
+                this.MQTT.sendCommand(Android, phone, alert, "json", JSON.stringify({d: {text:Smoke}}));
+                this.MQTT.sendCommand(Android, phone, log, "json", JSON.stringify({d: {text:Smoke, location:location}}));
                 this.logEvent(keyword, time, location);
                 identified = true;
                 break;
@@ -150,33 +145,18 @@ interpret_and_control.prototype.speechTranscript = function(transcript){
 
     // Find keywords? Or analyse sentence somehow?
     if(transcript.find()){
-        this.MQTT.sendCommand("Android", "phone", "speech", "json", JSON.stringify());
+        this.MQTT.sendCommand(Android, phone, "speech", "json", JSON.stringify());
     }
     if(!transcript.equals("")){
-        this.MQTT.sendCommand("pi", "dronepi", "movement", "json", "STOP");
-        this.MQTT.sendCommand("Android", "phone", "alert", "json", JSON.stringify({d:{text:"Person"}}));
-        this.MQTT.sendCommand("Android", "phone", "log", "json", JSON.stringify({d:{text:"Person"}}));
+        this.MQTT.sendCommand("pi", dronepi, movement, "json", "STOP");
+        this.MQTT.sendCommand(Android, phone, alert, "json", JSON.stringify({d:{text:"Person"}}));
+        this.MQTT.sendCommand(Android, phone, log, "json", JSON.stringify({d:{text:"Person"}}));
         this.logEvent("Person:" + transcript, time, location);
         return identified = true;
     }
     return identified;
 }
 
-// Publish a command
-// interpret_and_control.prototype.sendCommand = function(deviceType, deviceId, commandType, format, data){
-//     var client = this.client;
-//     client.on("connect", function(){
-//         client.publishDeviceCommand(deviceType, deviceId, commandType, format, data);
-//     });
-// }
-//
-// // Publish an event - should change logging to events not commands
-// interpret_and_control.prototype.sendEvent = function(deviceType, deviceId, commandType, format, data){
-//     var client = this.client;
-//     client.on("connect", function(){
-//         client.publishDeviceEvent(deviceType, deviceId, commandType, format, data);
-//     });
-// }
 
 // Log event with database
 interpret_and_control.prototype.logEvent = function(type, time, location){
