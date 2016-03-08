@@ -1,8 +1,9 @@
 
 
 var Client = require('ibmiotf');
-var mode_normal = require('./modes/normal');
-var mode_interact = require('./modes/interact');
+var modeNormal = require('./modes/normal');
+var modeInteract = require('./modes/interact');
+
 
 // Image Labels
 const Fire = "Fire";
@@ -25,7 +26,10 @@ function interpret_and_control(MQTT, cloudant){
     this.cloudant = cloudant;
     this.MQTT = MQTT;
 
-    this.currentMode = new mode_normal();
+    this.currentMode = new modeNormal(this.cloudant, this.MQTT);
+
+    this.currentMode.logEvent("ij", "ij", "ij");
+
     this.modeFactors = [];
     this.modeFactors.push({"imageLabels": []  });
 };
@@ -41,16 +45,16 @@ interpret_and_control.prototype.getMode = function(){
 interpret_and_control.prototype.setMode = function(modeType){
     switch(modeType){
         case Normal:
-            this.currentMode = new mode_normal();
+            this.currentMode = new modeNormal(this.cloudant, this.MQTT);
             break;
         case Fire:
-            this.currentMode = new mode_fire();
+            this.currentMode = new modeFire(this.cloudant, this.MQTT);
             break;
         case Person:
-            this.currentMode = new mode_interact();
+            this.currentMode = new modeInteract(this.cloudant, this.MQTT);
             break;
         case Explosion:
-            this.currentMode = new mode_avoidance();
+            this.currentMode = new modeAvoidance(this.cloudant, this.MQTT);
         default:
             console.error("No known mode: " + modeType);
     }
@@ -171,6 +175,17 @@ interpret_and_control.prototype.logEvent = function(type, time, location){
             console.log("Error inserting event \"" + type + "\" from time: " + time);
         }
     });
+}
+
+
+interpret_and_control.prototype.processImageLabels = function(keywords, time, location){
+    this.imageKeywordsDetermineMode(keywords);
+    this.currentMode.processImageLabels(keywords, time, location);
+}
+
+interpret_and_control.prototype.processSpeechTranscript = function (transcript, time, location){
+    this.speechTranscriptDetermineMode(transcript);
+    this.currentMode.processSpeechTranscript(transcript, time, location);
 }
 
 

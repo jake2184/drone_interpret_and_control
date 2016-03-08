@@ -1,8 +1,18 @@
+baseMode = require('./baseMode.js');
 
+function modeInteract(cloudant, MQTT) {
 
-function mode_interact() {
-
+    baseMode.call(this, cloudant, MQTT);
 }
 
+modeInteract.prototype = Object.create(baseMode.prototype);
+modeInteract.prototype.constructor = modeInteract;
 
-module.exports = mode_interact;
+modeInteract.prototype.processImageLabels = function (keywords, time, location){
+    
+}
+
+modeInteract.prototype.processSpeechTranscript = function (transcript) {}
+
+
+module.exports = modeInteract;
